@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "clsx": "^1.2.1",
     "fluent-ffmpeg": "^2.1.2",
     "next": "13.1.2",
+    "node-fetch": "^3.3.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "ytdl-core": "^4.11.2"
