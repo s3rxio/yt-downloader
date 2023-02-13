@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "fluent-ffmpeg": "^2.1.2",
     "next": "13.1.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -16,6 +18,7 @@
   },
   "devDependencies": {
     "@next/font": "13.1.2",
+    "@types/fluent-ffmpeg": "^2.1.20",
     "@types/node": "18.11.18",
     "@types/react": "18.0.26",
     "@types/react-dom": "18.0.10",
