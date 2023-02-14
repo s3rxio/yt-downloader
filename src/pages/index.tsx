@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { Input, Button } from "@/components/UI";
+import { IVideoFormat } from "@/types";
+import { MoreVideoDetails } from "ytdl-core";
 
 const Home = () => {
 	const [url, setUrl] = useState("");
+	const [videoDetails, setVideoDetails] = useState<MoreVideoDetails>(
+		{} as MoreVideoDetails
+	);
+	const [formats, setFormats] = useState<IVideoFormat[]>([]);
 	const [error, setError] = useState("");
 
 	function handleOnClick() {
@@ -13,8 +19,8 @@ const Home = () => {
 				const data = await res.json();
 				if (data.error) return setError(data.error);
 				setError("");
-				// Enable this to download the file
-				window.open(data.url);
+				setVideoDetails(data.videoDetails);
+				setFormats(data.formats);
 			})
 			.catch(err => {
 				setError(err.message);
@@ -36,13 +42,7 @@ const Home = () => {
 					onChange={ev => setUrl(ev.target.value)}
 				/>
 
-				<Button
-					onClick={() => {
-						handleOnClick();
-					}}
-				>
-					Download
-				</Button>
+				<Button onClick={() => handleOnClick()}>Download</Button>
 			</div>
 		</main>
 	);

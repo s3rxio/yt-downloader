@@ -4,17 +4,17 @@ import * as fs from "fs";
 import path from "path";
 import { mergeVideoAndAudio } from "@/utils";
 import fetch from "node-fetch";
-
-interface VideoFormat {
-	url: string;
-	qualityLabel: ytdl.videoFormat["qualityLabel"];
-	hasVideo: boolean;
-	hasAudio: boolean;
-}
+import { IVideoFormat } from "src/types";
 
 type Data = {
-	formats?: VideoFormat[];
+	videoDetails?: ytdl.MoreVideoDetails;
+	formats?: IVideoFormat[];
 	error?: string;
+};
+
+const deleteTempMedia = (tempVideoPath: string, tempAudioPath: string) => {
+	fs.unlinkSync(tempVideoPath);
+	fs.unlinkSync(tempAudioPath);
 };
 
 const createTempMedia = async (
@@ -22,9 +22,6 @@ const createTempMedia = async (
 	audioUrl: string,
 	tempDirPath: string
 ) => {
-	const fetchedVideo = await fetch(videoUrl);
-	const fetchedAudio = await fetch(audioUrl);
-
 	if (!fs.existsSync(tempDirPath)) fs.mkdirSync(tempDirPath);
 
 	const tempVideoPath = path.join(tempDirPath, `${Date.now()}.mp4`);
@@ -33,6 +30,9 @@ const createTempMedia = async (
 	const videoWriteStream = fs.createWriteStream(tempVideoPath);
 	const audioWriteStream = fs.createWriteStream(tempAudioPath);
 
+	const fetchedVideo = await fetch(videoUrl);
+	const fetchedAudio = await fetch(audioUrl);
+
 	await new Promise((resolve, reject) => {
 		fetchedVideo.body?.pipe(videoWriteStream);
 		fetchedAudio.body?.pipe(audioWriteStream);
@@ -40,13 +40,10 @@ const createTempMedia = async (
 		fetchedVideo.body?.on("error", reject);
 		fetchedAudio.body?.on("error", reject);
 
-		videoWriteStream.on("data", data => {
-			console.log(data);
-		});
-
 		videoWriteStream.on("finish", resolve);
 		audioWriteStream.on("finish", resolve);
 	});
+
 	return { tempVideoPath, tempAudioPath };
 };
 
@@ -77,7 +74,7 @@ export default async function handler(
 		filter: "audioonly"
 	});
 
-	const computedFormats: VideoFormat[] = formats.map(format => {
+	const computedFormats: IVideoFormat[] = formats.map(format => {
 		const { url, qualityLabel, hasVideo, hasAudio } = format;
 		return { url, qualityLabel, hasVideo, hasAudio };
 	});
@@ -87,7 +84,9 @@ export default async function handler(
 		videoAndAudio.fps! >= video.fps! &&
 		videoAndAudio.bitrate! >= audio.bitrate!
 	) {
-		return res.status(200).json({ formats: computedFormats });
+		return res
+			.status(200)
+			.json({ videoDetails: videoDetails, formats: computedFormats });
 	}
 
 	const tempDirPath = path.join(process.cwd(), "temp");
@@ -106,7 +105,11 @@ export default async function handler(
 	mergeVideoAndAudio(tempVideoPath, tempAudioPath, outputPath)
 		.on("error", error => {
 			console.error(error);
-			res.status(500).json({ formats: computedFormats });
+			res
+				.status(500)
+				.json({ videoDetails: videoDetails, formats: computedFormats });
+
+			deleteTempMedia(tempVideoPath, tempAudioPath);
 		})
 		.on("end", () => {
 			const downloadUrl = `${process.env.API_URL}/output/${outputFileName}`;
@@ -118,11 +121,10 @@ export default async function handler(
 				hasAudio: true
 			});
 
-			console.log(computedFormats);
+			res
+				.status(200)
+				.json({ videoDetails: videoDetails, formats: computedFormats });
 
-			res.status(200).json({ formats: computedFormats });
-
-			fs.unlinkSync(tempVideoPath);
-			fs.unlinkSync(tempAudioPath);
+			deleteTempMedia(tempVideoPath, tempAudioPath);
 		});
 }

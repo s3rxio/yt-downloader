@@ -1,10 +1,6 @@
 import React, { FC } from "react";
 import clsx from "clsx";
-
-export interface IInput extends React.InputHTMLAttributes<HTMLInputElement> {
-	error?: boolean;
-	value?: string;
-}
+import {IInput} from "@/types";
 
 const Input: FC<IInput> = ({ className, value, error, ...props }) => {
 	return (

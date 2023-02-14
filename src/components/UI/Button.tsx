@@ -1,10 +1,6 @@
 import React, { FC } from "react";
 import clsx from "clsx";
-
-export interface IButton extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-	error?: boolean;
-	children?: React.ReactNode;
-}
+import {IButton} from "@/types";
 
 const Button: FC<IButton> = ({ className, children, error, ...props }) => {
 	return (
